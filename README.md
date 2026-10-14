@@ -6,7 +6,7 @@ A lightweight, client-side web utility built with **HTML**, **Tailwind CSS**, an
 
 ## Features
 
-- 🔒 **Client-Side Security**: Your API key stays entirely in your browser and is sent directly to the official endpoint—never stored or shared by this app.
+- 🔒 **Client-Side Security**: Your API key is entered in your browser and passed through the proxy to the official endpoint—it is never stored or logged by this app.
 - 📊 **Interactive KPI Dashboard**:
   - **Token Consumption** with a visual progress bar.
   - **Tokens Used** with compacted numbers (e.g., `1.27B`, `45.2M`).
@@ -40,7 +40,27 @@ python -m http.server 8000
 
 Then open `http://localhost:8000` in your browser.
 
-> **CORS note:** This tool makes a direct browser request to `https://rootsys.cloud/v1/quota`. If the endpoint does not return permissive CORS headers, the browser will block the response. In that case the request must be proxied through a small backend instead. This app cannot bypass browser CORS rules.
+> **CORS note:** The RootSys `/v1/quota` endpoint enforces a strict origin allowlist—it only returns `Access-Control-Allow-Origin` for `localhost` and its own domain. When hosted elsewhere (e.g. GitHub Pages), a direct browser request is blocked. To work around this, the app calls a small **Cloudflare Worker** proxy (see below) that performs the request server-to-server, where CORS does not apply.
+
+---
+
+## Cloudflare Worker Proxy
+
+The Worker source lives in [`worker.js`](worker.js).
+
+### Deploy
+
+1. In the [Cloudflare dashboard](https://dash.cloudflare.com), go to **Workers & Pages → Create application → Create Worker**.
+2. Name it (e.g. `rootsys-proxy`) and deploy the default template.
+3. Click **Edit code**, replace the contents with `worker.js`, and click **Deploy**.
+4. Note the Worker URL, e.g. `https://rootsys-proxy.<your-subdomain>.workers.dev`.
+
+### Configure
+
+- Set `QUOTA_ENDPOINT` in `index.html` to your Worker URL.
+- Edit `ALLOWED_ORIGINS` in `worker.js` to list the exact browser origins allowed to call the Worker. Only those origins receive CORS headers; all others get a `403` and no CORS headers, so the browser blocks them. Keep the `localhost` entries for local testing.
+
+> The Worker is a transparent proxy: it forwards the caller's `Authorization` header and does not store or log the API key. Requests made by the Worker to the upstream API are not billed by Cloudflare.
 
 ---
 
@@ -90,6 +110,7 @@ Fields are accessed defensively—missing values render as `--` rather than brea
 - [Tailwind CSS](https://tailwindcss.com/) (loaded via the CDN for zero-build simplicity)
 - Google Fonts — Inter
 - Vanilla JavaScript (no framework, no build step)
+- [Cloudflare Workers](https://workers.cloudflare.com/) (optional CORS proxy)
 
 > The Tailwind CDN is intended for development/prototyping. For a production deployment, generate a compiled stylesheet via the Tailwind CLI.
 

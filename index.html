@@ -229,6 +229,15 @@
     </footer>
 
     <script>
+        // --- Configuration ---
+        // The RootSys endpoint blocks cross-origin browser requests (its CORS
+        // allowlist only permits localhost and its own domain), so requests are
+        // proxied through a Cloudflare Worker which returns permissive CORS
+        // headers. Deploy your own Worker and set its URL below.
+        // To call RootSys directly instead (works only when the origin is
+        // allowlisted, e.g. localhost), set this to 'https://rootsys.cloud/v1/quota'.
+        const QUOTA_ENDPOINT = 'https://rootsys-proxy.techdirectt.workers.dev';
+
         // Helper function to compact large numbers into Billions, Millions, Thousands
         function compactNumber(num) {
             const n = Number(num);
@@ -318,7 +327,7 @@
             const timeoutId = setTimeout(() => controller.abort(), 15000);
 
             try {
-                const response = await fetch('https://rootsys.cloud/v1/quota', {
+                const response = await fetch(QUOTA_ENDPOINT, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
@@ -421,10 +430,10 @@
             } catch (err) {
                 if (err.name === 'AbortError') {
                     errorTitle.textContent = "Request Timed Out";
-                    errorMessage.textContent = "The request to https://rootsys.cloud/v1/quota took too long. Please check your connection and try again.";
+                    errorMessage.textContent = `The request to ${QUOTA_ENDPOINT} took too long. Please check your connection and try again.`;
                 } else {
                     errorTitle.textContent = "Network or CORS Error";
-                    errorMessage.textContent = err.message || "Failed to reach https://rootsys.cloud/v1/quota. Please check your internet connection or browser restrictions.";
+                    errorMessage.textContent = err.message || `Failed to reach ${QUOTA_ENDPOINT}. Please check your internet connection or browser restrictions.`;
                 }
                 errorCard.classList.remove('hidden');
             } finally {
