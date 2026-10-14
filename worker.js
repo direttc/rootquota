@@ -17,7 +17,7 @@
 // Origin lock-down: only these browser origins may call this Worker.
 // Adjust to match your deployment. Keep localhost entries for local testing.
 const ALLOWED_ORIGINS = [
-  'https://techdirectt.github.io',
+  'https://direttc.github.io',
   'http://localhost:3000',
   'http://localhost:8000',
   'http://127.0.0.1:3000',
